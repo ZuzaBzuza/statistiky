@@ -119,6 +119,7 @@ window.dash = (() => {
 .tz-table td.tz-code { color: var(--color-fg-muted); width: 3rem; min-width: 0; }
 .tz-table tr.tz-total td { font-weight: 600; }
 .tz-table td.tz-na { color: var(--color-fg-muted); }
+.tz-table .tz-sum { font-weight: 600; border-left: 1px solid var(--color-border-line); padding-left: .75rem; }
 
 .tz-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; line-height: 1.5; }
 .tz-tip .tz-tiphead { color: var(--cds-text-secondary); }
@@ -159,7 +160,7 @@ window.dash = (() => {
 
   <section class="tz-card" id="tabulka">
     <h2 id="tz-table-title">Celý oddíl IX</h2>
-    <p class="tz-note">Všechny řádky ze strany 6 výkazu pro zvolenou formu, pohlaví a roky. Číslo vlevo je číslo řádku ve výkazu.</p>
+    <p class="tz-note">Všechny řádky ze strany 6 výkazu pro zvolenou formu, pohlaví a roky. Číslo vlevo je číslo řádku ve výkazu. Sloupec Součet sčítá všechny vybrané roky.</p>
     <div class="tz-tables" id="tz-tables"></div>
   </section>
 
@@ -425,6 +426,7 @@ window.dash = (() => {
       const th0 = document.createElement('th'); th0.textContent = 'Ukazatel'; th0.dataset.field = 'item'; thead.append(th0);
       const thc = document.createElement('th'); thc.textContent = 'Ř.'; thc.dataset.field = 'code'; thead.append(thc);
       for (const y of years) { const th = document.createElement('th'); th.textContent = y; th.dataset.field = 'y' + y; thead.append(th); }
+      if (years.length > 1) { const th = document.createElement('th'); th.textContent = 'Součet'; th.className = 'tz-sum'; thead.append(th); }
       const tb = table.createTBody();
       rows.filter((r) => r.section === s && r.form === form && r.sex === sex).sort((a, b) => a.order - b.order).forEach((r) => {
         const tr = tb.insertRow(); tr.dataset.key = r.key;
@@ -432,6 +434,11 @@ window.dash = (() => {
         const c0 = tr.insertCell(); c0.textContent = r.item;
         const c1 = tr.insertCell(); c1.textContent = r.code; c1.className = 'tz-code';
         for (const y of years) { const c = tr.insertCell(); const v = r['y' + y]; c.textContent = fmt(v); if (v == null) c.className = 'tz-na'; }
+        if (years.length > 1) {
+          const vals = years.map((y) => r['y' + y]);
+          const c = tr.insertCell(); c.className = 'tz-sum';
+          c.textContent = vals.some((v) => v != null) ? fmt(vals.reduce((a, v) => a + (v || 0), 0)) : '—';
+        }
       });
       sc.append(table);
       wrap.append(h3, sc);
